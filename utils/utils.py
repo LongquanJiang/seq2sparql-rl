@@ -4,8 +4,7 @@ import json
 ENTITY_PATTERN = re.compile('Q[0-9]+')
 PREDICATE_PATTERN = re.compile('P[0-9]+')
 
-with open("../data/labels_dict.json") as labelFile:
-    labels_dict = json.load(labelFile)
+grammar_keywords = [line.strip() for line in open("../data/keywords.txt", "r").readlines() if line.strip() != ""]
 
 def is_timestamp(timestamp):
     pattern = re.compile('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T00:00:00Z')
@@ -13,7 +12,6 @@ def is_timestamp(timestamp):
         return False
     else:
         return True
-
 
 def convertTimestamp(timestamp):
     yearPattern = re.compile('^[0-9][0-9][0-9][0-9]-00-00T00:00:00Z')

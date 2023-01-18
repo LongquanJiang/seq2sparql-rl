@@ -6,6 +6,9 @@ import json
 import argparse
 from time import sleep
 from utils import KB_query, utils
+from gensim.corpora import Dictionary
+from gensim.utils import simple_preprocess
+from smart_open import smart_open
 
 
 PREFIXES_WIKIDATA = {
@@ -80,41 +83,47 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.dataset == "lcq2": # wikidata
+    dictionary = Dictionary(
+        simple_preprocess(line, deacc =True) for line in open('../data/keywords.txt', encoding='utf-8')
+    )
 
-        train_data_dir = "../data/LC-QuAD2/train_data"
-        if not os.path.exists(train_data_dir):
-            os.makedirs(train_data_dir)
+    dictionary.save("../data/kw2id.dict")
 
-        test_data_dir = "../data/LC-QuAD2/test_data"
-        if not os.path.exists(test_data_dir):
-            os.makedirs(test_data_dir)
-
-        train_data = json.load(open("../data/LC-QuAD2/train.json"))
-        train_questions, train_answers, train_qList, train_sparqls, train_questions_error = preprocess_lcq2(train_data, args.kb_endpoint)
-
-        with open(os.path.join(train_data_dir, "all_questions_trainset.json"), "w") as questions_file:
-            json.dump(train_questions, questions_file)
-        with open(os.path.join(train_data_dir, "all_answers_trainset.json"), "w") as answers_file:
-            json.dump(train_answers, answers_file)
-        with open(os.path.join(train_data_dir, "questionId_list_trainset.json"), "w") as qIds_file:
-            json.dump(train_qList, qIds_file)
-        with open(os.path.join(train_data_dir, "all_sparqls_trainset.json"), "w") as sparqls_file:
-            json.dump(train_sparqls, sparqls_file)
-        with open(os.path.join(train_data_dir, "all_error_questions_trainset.json"), "w") as error_file:
-            json.dump(train_questions_error, error_file)
-
-        test_data = json.load(open("../data/LC-QuAD2/test.json"))
-        test_questions, test_answers, test_qList, test_sparqls, test_questions_error = preprocess_lcq2(test_data, args.kb_endpoint)
-
-        with open(os.path.join(test_data_dir, "all_questions_testset.json"), "w") as questions_file:
-            json.dump(test_questions, questions_file)
-        with open(os.path.join(test_data_dir, "all_answers_testset.json"), "w") as answers_file:
-            json.dump(test_answers, answers_file)
-        with open(os.path.join(test_data_dir, "questionId_list_testset.json"), "w") as qIds_file:
-            json.dump(test_qList, qIds_file)
-        with open(os.path.join(test_data_dir, "all_sparqls_testset.json"), "w") as sparqls_file:
-            json.dump(test_sparqls, sparqls_file)
-        with open(os.path.join(test_data_dir, "all_error_questions_testset.json"), "w") as error_file:
-            json.dump(train_questions_error, error_file)
+    # if args.dataset == "lcq2": # wikidata
+    #
+    #     train_data_dir = "../data/LC-QuAD2/train_data"
+    #     if not os.path.exists(train_data_dir):
+    #         os.makedirs(train_data_dir)
+    #
+    #     test_data_dir = "../data/LC-QuAD2/test_data"
+    #     if not os.path.exists(test_data_dir):
+    #         os.makedirs(test_data_dir)
+    #
+    #     train_data = json.load(open("../data/LC-QuAD2/train.json"))
+    #     train_questions, train_answers, train_qList, train_sparqls, train_questions_error = preprocess_lcq2(train_data, args.kb_endpoint)
+    #
+    #     with open(os.path.join(train_data_dir, "all_questions_trainset.json"), "w") as questions_file:
+    #         json.dump(train_questions, questions_file)
+    #     with open(os.path.join(train_data_dir, "all_answers_trainset.json"), "w") as answers_file:
+    #         json.dump(train_answers, answers_file)
+    #     with open(os.path.join(train_data_dir, "questionId_list_trainset.json"), "w") as qIds_file:
+    #         json.dump(train_qList, qIds_file)
+    #     with open(os.path.join(train_data_dir, "all_sparqls_trainset.json"), "w") as sparqls_file:
+    #         json.dump(train_sparqls, sparqls_file)
+    #     with open(os.path.join(train_data_dir, "all_error_questions_trainset.json"), "w") as error_file:
+    #         json.dump(train_questions_error, error_file)
+    #
+    #     test_data = json.load(open("../data/LC-QuAD2/test.json"))
+    #     test_questions, test_answers, test_qList, test_sparqls, test_questions_error = preprocess_lcq2(test_data, args.kb_endpoint)
+    #
+    #     with open(os.path.join(test_data_dir, "all_questions_testset.json"), "w") as questions_file:
+    #         json.dump(test_questions, questions_file)
+    #     with open(os.path.join(test_data_dir, "all_answers_testset.json"), "w") as answers_file:
+    #         json.dump(test_answers, answers_file)
+    #     with open(os.path.join(test_data_dir, "questionId_list_testset.json"), "w") as qIds_file:
+    #         json.dump(test_qList, qIds_file)
+    #     with open(os.path.join(test_data_dir, "all_sparqls_testset.json"), "w") as sparqls_file:
+    #         json.dump(test_sparqls, sparqls_file)
+    #     with open(os.path.join(test_data_dir, "all_error_questions_testset.json"), "w") as error_file:
+    #         json.dump(train_questions_error, error_file)
 

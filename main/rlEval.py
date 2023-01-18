@@ -32,7 +32,7 @@ from tf_agents.trajectories import time_step as ts
 import pickle
 import operator
 
-from policyNetwork import KGActionDistNet
+from rlPolicy import KGActionDistNet
 sys.path.append("../utils")
 import utils
 

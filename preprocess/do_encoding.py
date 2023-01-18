@@ -1,12 +1,12 @@
 import sys
 sys.path.append("..")
 
-import json
-import pickle
 import argparse
 import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
 from utils import utils
+import numpy as np
+from gensim.corpora import Dictionary
 
 """Encode questions and actions with pre-trained BERT model"""
 
@@ -112,6 +112,10 @@ def get_action_encodings(action_labels):
     return all_encoded_paths, action_nbrs
 
 
+def encode_keywords(keywords):
+    encoded = tf.random.uniform((len(keywords), 768))
+    return encoded
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -119,63 +123,67 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.dataset == "lcq2": # wikidata
+    keywords_dict = Dictionary.load("../data/kw2id.dict")
+    keywords = list(keywords_dict.id2token.values())
+    encoded_keywords = encode_keywords(keywords)
 
-        # load the train set of questions
-        with open("../data/LC-QuAD2/train_data/all_questions_trainset.json", "r") as questions_file:
-            train_questions = json.load(questions_file)
-        # load all paths for each startpoints per question in the train set
-        with open("../data/LC-QuAD2/train_data/contextPaths_trainset.json", "r") as contextPaths_file:
-            train_paths = json.load(contextPaths_file)
-
-        # load the test set of questions
-        with open("../data/LC-QuAD2/test_data/all_questions_testset.json", "r") as questions_file:
-            test_questions = json.load(questions_file)
-        # load all paths for each startpoint per question in the test set
-        with open("../data/LC-QuAD2/test_data/contextPaths_testset.json", "r") as contextPaths_file:
-            test_paths = json.load(contextPaths_file)
-
-        # encode the train set of questions
-        encoded_train_questions = dict()
-
-        for idx, qId in enumerate(train_questions.keys()):
-            encoded_train_questions[qId] = encode_question(train_questions[qId])
-            print("{0}, Completed: {1}/{2}".format(qId, idx, len(train_questions.keys())))
-
-        with open("../data/LC-QuAD2/train_data/encoded_questions_trainset.pickle", "wb") as encoded_questions_file:
-            pickle.dump(encoded_train_questions, encoded_questions_file)
-
-        # encode the test set of questions
-        encoded_test_questions = dict()
-        for idx, qId in enumerate(test_questions.keys()):
-            encoded_test_questions[qId] = encode_question(test_questions[qId])
-            print("{0}, Completed: {1}/{2}".format(qId, idx, len(test_questions.keys())))
-
-        with open("../data/LC-QuAD2/test_data/encoded_questions_testset.pickle", "wb") as encoded_questions_file:
-            pickle.dump(encoded_test_questions, encoded_questions_file)
-
-        print("Question Encoding Done!")
-
-        # get action labels (needed for action encoding)
-        train_action_labels = get_action_labels(train_paths)
-        with open("../data/LC-QuAD2/train_data/action_labels_trainset.json", "w") as qfile:
-            json.dump(train_action_labels, qfile)
-
-        test_action_labels = get_action_labels(test_paths)
-        with open("../data/LC-QuAD2/test_data/action_labels_testset.json", "w") as qfile:
-            json.dump(test_action_labels, qfile)
-
-        # encode actions
-        encoded_train_paths, train_action_nbrs = get_action_encodings(train_action_labels)
-        with open("../data/LC-QuAD2/train_data/encoded_paths_trainset.pickle", "wb") as encoded_contextPaths_file:
-            pickle.dump(encoded_train_paths, encoded_contextPaths_file)
-        with open("../data/LC-QuAD2/train_data/action_numbers_trainset.json", "w") as acntion_nbr_file:
-            json.dump(train_action_nbrs, acntion_nbr_file)
-
-        encoded_test_paths, test_action_nbrs = get_action_encodings(test_action_labels)
-        with open("../data/LC-QuAD2/test_data/encoded_paths_testset.pickle", "wb") as encoded_contextPaths_file:
-            pickle.dump(encoded_test_paths, encoded_contextPaths_file)
-        with open("../data/LC-QuAD2/test_data/action_numbers_testset.json", "w") as acntion_nbr_file:
-            json.dump(test_action_nbrs, acntion_nbr_file)
-
-        print("Action Encoding Done!")
+    # if args.dataset == "lcq2": # wikidata
+    #
+    #     # load the train set of questions
+    #     with open("../data/LC-QuAD2/train_data/all_questions_trainset.json", "r") as questions_file:
+    #         train_questions = json.load(questions_file)
+    #     # load all paths for each startpoints per question in the train set
+    #     with open("../data/LC-QuAD2/train_data/contextPaths_trainset.json", "r") as contextPaths_file:
+    #         train_paths = json.load(contextPaths_file)
+    #
+    #     # load the test set of questions
+    #     with open("../data/LC-QuAD2/test_data/all_questions_testset.json", "r") as questions_file:
+    #         test_questions = json.load(questions_file)
+    #     # load all paths for each startpoint per question in the test set
+    #     with open("../data/LC-QuAD2/test_data/contextPaths_testset.json", "r") as contextPaths_file:
+    #         test_paths = json.load(contextPaths_file)
+    #
+    #     # encode the train set of questions
+    #     encoded_train_questions = dict()
+    #
+    #     for idx, qId in enumerate(train_questions.keys()):
+    #         encoded_train_questions[qId] = encode_question(train_questions[qId])
+    #         print("{0}, Completed: {1}/{2}".format(qId, idx, len(train_questions.keys())))
+    #
+    #     with open("../data/LC-QuAD2/train_data/encoded_questions_trainset.pickle", "wb") as encoded_questions_file:
+    #         pickle.dump(encoded_train_questions, encoded_questions_file)
+    #
+    #     # encode the test set of questions
+    #     encoded_test_questions = dict()
+    #     for idx, qId in enumerate(test_questions.keys()):
+    #         encoded_test_questions[qId] = encode_question(test_questions[qId])
+    #         print("{0}, Completed: {1}/{2}".format(qId, idx, len(test_questions.keys())))
+    #
+    #     with open("../data/LC-QuAD2/test_data/encoded_questions_testset.pickle", "wb") as encoded_questions_file:
+    #         pickle.dump(encoded_test_questions, encoded_questions_file)
+    #
+    #     print("Question Encoding Done!")
+    #
+    #     # get action labels (needed for action encoding)
+    #     train_action_labels = get_action_labels(train_paths)
+    #     with open("../data/LC-QuAD2/train_data/action_labels_trainset.json", "w") as qfile:
+    #         json.dump(train_action_labels, qfile)
+    #
+    #     test_action_labels = get_action_labels(test_paths)
+    #     with open("../data/LC-QuAD2/test_data/action_labels_testset.json", "w") as qfile:
+    #         json.dump(test_action_labels, qfile)
+    #
+    #     # encode actions
+    #     encoded_train_paths, train_action_nbrs = get_action_encodings(train_action_labels)
+    #     with open("../data/LC-QuAD2/train_data/encoded_paths_trainset.pickle", "wb") as encoded_contextPaths_file:
+    #         pickle.dump(encoded_train_paths, encoded_contextPaths_file)
+    #     with open("../data/LC-QuAD2/train_data/action_numbers_trainset.json", "w") as acntion_nbr_file:
+    #         json.dump(train_action_nbrs, acntion_nbr_file)
+    #
+    #     encoded_test_paths, test_action_nbrs = get_action_encodings(test_action_labels)
+    #     with open("../data/LC-QuAD2/test_data/encoded_paths_testset.pickle", "wb") as encoded_contextPaths_file:
+    #         pickle.dump(encoded_test_paths, encoded_contextPaths_file)
+    #     with open("../data/LC-QuAD2/test_data/action_numbers_testset.json", "w") as acntion_nbr_file:
+    #         json.dump(test_action_nbrs, acntion_nbr_file)
+    #
+    #     print("Action Encoding Done!")
