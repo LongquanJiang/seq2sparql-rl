@@ -1,0 +1,265 @@
+?start: queryunit
+queryunit: query
+//query: prologue ( selectquery | constructquery | describequery | askquery ) valuesclause
+query: selectquery | askquery
+//updateunit: update
+//prologue: ( basedecl | prefixdecl )*
+//basedecl: "BASE" IRIREF
+//prefixdecl: "PREFIX" PNAME_NS IRIREF
+//selectquery: selectclause datasetclause* whereclause solutionmodifier
+selectquery: selectclause whereclause solutionmodifier
+//subselect: selectclause whereclause solutionmodifier valuesclause
+selectclause: "SELECT" ( "DISTINCT" | "REDUCED" )? ( ( var | ( "(" expression "AS" var ")" ) )+ | "*" )
+//constructquery: "CONSTRUCT" ( constructtemplate datasetclause* whereclause solutionmodifier | datasetclause* "WHERE" "{" triplestemplate? "}" solutionmodifier )
+//describequery: "DESCRIBE" ( varoriri+ | "*" ) datasetclause* whereclause? solutionmodifier
+//askquery: "ASK" datasetclause* whereclause solutionmodifier
+askquery: "ASK" whereclause solutionmodifier
+//datasetclause: "FROM" ( defaultgraphclause | namedgraphclause )
+//defaultgraphclause: sourceselector
+//namedgraphclause: "NAMED" sourceselector
+//sourceselector: iri
+whereclause: "WHERE"? groupgraphpattern
+solutionmodifier: groupclause? havingclause? orderclause? limitoffsetclauses?
+groupclause: "GROUP" "BY" groupcondition+
+//groupcondition: builtincall | functioncall | "(" expression ( "AS" var )? ")" | var
+groupcondition: builtincall | "(" expression ( "AS" var )? ")" | var
+havingclause: "HAVING" havingcondition+
+havingcondition: constraint
+orderclause: "ORDER" "BY" ordercondition+
+ordercondition: ( ( "ASC" | "DESC" ) brackettedexpression ) | ( constraint | var )
+limitoffsetclauses: limitclause offsetclause? | offsetclause limitclause?
+limitclause : "LIMIT" integer
+offsetclause: "OFFSET" integer
+//valuesclause: ( "VALUES" datablock )?
+//update: prologue ( update1 ( ";" update )? )?
+//update1: load | clear | drop | add | move | copy | create | insertdata | deletedata | deletewhere | modify
+//load: "load" "SILENT"? iri ( "INTO" graphref )?
+//clear: "clear" "SILENT"? graphrefall
+//drop: "drop" "SILENT"? graphrefall
+//create: "create" "SILENT"? graphref
+//add: "add" "SILENT"? graphordefault "TO" graphordefault
+//move: "move" "SILENT"? graphordefault "TO" graphordefault
+//copy: "copy" "SILENT"? graphordefault "TO" graphordefault
+//insertdata: "INSERT DATA" quaddata
+//deletedata: "DELETE DATA" quaddata
+//deletewhere: "DELETE WHERE" quadpattern
+//modify: ( "WITH" iri )? ( deleteclause insertclause? | insertclause ) usingclause* "WHERE" groupgraphpattern
+//deleteclause: "DELETE" quadpattern
+//insertclause: "INSERT" quadpattern
+//usingclause: "USING" ( iri | "NAMED" iri )
+//graphordefault: "DEFAULT" | "GRAPH"? iri
+//graphref: "GRAPH" iri
+//graphrefall: graphref | "DEFAULT" | "NAMED" | "ALL"
+//quadpattern: "{" quads "}"
+//quaddata: "{" quads "}"
+//quads: triplestemplate? ( quadsnottriples "."? triplestemplate? )*
+//quadsnottriples: "GRAPH" varoriri "{" triplestemplate? "}"
+triplestemplate: triplessamesubject ( "." triplestemplate? )?
+//groupgraphpattern: "{" ( subselect | groupgraphpatternsub ) "}"
+groupgraphpattern: "{" groupgraphpatternsub "}"
+groupgraphpatternsub: triplesblock? ( graphpatternnottriples "."? triplesblock? )*
+triplesblock: triplessamesubjectpath ( "." triplesblock? )?
+//graphpatternnottriples: grouporuniongraphpattern | optionalgraphpattern | minusgraphpattern | graphgraphpattern | servicegraphpattern | filter | bind | inlinedata
+graphpatternnottriples: grouporuniongraphpattern | filter
+//optionalgraphpattern: "OPTIONAL" groupgraphpattern
+//graphgraphpattern: "GRAPH" varoriri groupgraphpattern
+//servicegraphpattern: "SERVICE" "SILENT"? varoriri groupgraphpattern
+//bind: "BIND" "(" expression "AS" var ")"
+//inlinedata: "VALUES" datablock
+//datablock: inlinedataonevar | inlinedatafull
+//inlinedataonevar: var "{" datablockvalue* "}"
+//inlinedatafull: ( NIL | "(" var* ")" ) "{" ( "(" datablockvalue* ")" | NIL )* "}"
+//datablockvalue: iri | rdfliteral | numericliteral | booleanliteral | "UNDEF"
+//datablockvalue: iri | rdfliteral | numericliteral | booleanliteral
+//minusgraphpattern: "MINUS" groupgraphpattern
+grouporuniongraphpattern: groupgraphpattern ( "UNION" groupgraphpattern )*
+filter: "FILTER" constraint
+//constraint: brackettedexpression | builtincall | functioncall
+constraint: brackettedexpression | builtincall
+//functioncall: iri arglist
+//arglist: NIL | "(" "DISTINCT"? expression ( "," expression )* ")"
+expressionlist: NIL | "(" expression ( "," expression )* ")"
+//constructtemplate: "{" constructtriples? "}"
+//constructtriples: triplessamesubject ( "." constructtriples? )?
+triplessamesubject: varorterm propertylistnotempty | triplesnode propertylist
+propertylist: propertylistnotempty?
+propertylistnotempty: verb objectlist ( ";" ( verb objectlist )? )*
+//verb: varoriri | "a"
+verb: varoriri
+objectlist: object ( "," object )*
+object: graphnode
+//triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
+triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
+propertylistpath: propertylistpathnotempty?
+//propertylistpathnotempty: ( verbpath | verbsimple ) objectlistpath ( ";" ( ( verbpath | verbsimple ) objectlist )? )*
+propertylistpathnotempty: ( verbpath | verbsimple ) objectlistpath
+verbpath: path
+verbsimple: var
+//objectlistpath: objectpath ( "," objectpath )*
+objectlistpath: objectpath
+objectpath: graphnodepath
+path: pathalternative
+//pathalternative: pathsequence ( "|" pathsequence )*
+pathalternative: pathsequence
+//pathsequence: patheltorinverse ( "/" patheltorinverse )*
+pathsequence: patheltorinverse
+//pathelt: pathprimary pathmod?
+pathelt: pathprimary
+//patheltorinverse: pathelt | "^" pathelt
+patheltorinverse: pathelt
+//pathmod: "?" | "*" | "+"
+//pathprimary: iri | "a" | "!" pathnegatedpropertyset | "(" path ")"
+//pathprimary: iri | "!" pathnegatedpropertyset | "(" path ")"
+pathprimary: iri
+//pathnegatedpropertyset: pathoneinpropertyset | "(" ( pathoneinpropertyset ( "|" pathoneinpropertyset )* )? ")"
+//pathoneinpropertyset: iri | "a" | "^" ( iri | "a" )
+//pathoneinpropertyset: iri | "^" iri
+integer: INTEGER
+//triplesnode: collection | blanknodepropertylist
+triplesnode: collection
+//blanknodepropertylist: "[" propertylistnotempty "]"
+//triplesnodepath: collectionpath | blanknodepropertylistpath
+triplesnodepath: collectionpath
+//blanknodepropertylistpath: "[" propertylistpathnotempty "]"
+collection: "(" graphnode+ ")"
+collectionpath: "(" graphnodepath+ ")"
+graphnode: varorterm | triplesnode
+graphnodepath: varorterm | triplesnodepath
+varorterm: var | graphterm
+varoriri: var | iri
+//var: var1 | var2
+var: VAR
+//graphterm: iri | rdfliteral | numericliteral | booleanliteral | blanknode | NIL
+graphterm: iri | rdfliteral | numericliteral | booleanliteral | NIL
+expression: conditionalorexpression
+conditionalorexpression: conditionalandexpression ( "||" conditionalandexpression )*
+conditionalandexpression: valuelogical ( "&&" valuelogical )*
+valuelogical: relationalexpression
+relationalexpression: numericexpression ( "=" numericexpression | "!=" numericexpression | "<" numericexpression | ">" numericexpression | "<=" numericexpression | ">=" numericexpression | "IN" expressionlist | "NOT" "IN" expressionlist )?
+numericexpression: additiveexpression
+//additiveexpression: multiplicativeexpression ( "+" multiplicativeexpression | "-" multiplicativeexpression | ( numericliteralpositive | numericliteralnegative ) ( ( "*" unaryexpression ) | ( "/" unaryexpression ) )* )*
+additiveexpression: multiplicativeexpression ( "+" multiplicativeexpression | "-" multiplicativeexpression | numericliteral ( ( "*" unaryexpression ) | ( "/" unaryexpression ) )* )*
+multiplicativeexpression: unaryexpression ( "*" unaryexpression | "/" unaryexpression )*
+unaryexpression: "!" primaryexpression | "+" primaryexpression | "-" primaryexpression | primaryexpression
+//primaryexpression: brackettedexpression | builtincall | iriorfunction | rdfliteral | numericliteral | booleanliteral | var
+primaryexpression: brackettedexpression | builtincall | iri | rdfliteral | numericliteral | booleanliteral | var
+brackettedexpression: "(" expression ")"
+//builtincall: aggregate | stringexpression | langexpression | langmatchesexpression | datatypeexpression | boundexpression | iriexpression | uriexpression | bnodeexpression | randnil | absexpression | ceilexpression | floorexpression | roundexpression | concatexpressionlist | substringexpression | stringlengthexpression | strreplaceexpression | ucaseexpression | lcaseexpression | encodeforuriexpression | containsexpression | stringstartsexpression | stringendsexpression | stringbeforeexpression | stringafterexpression | yearexpression | monthexpression | dayexpression | hoursexpression | minutesexpression | secondsexpression | timezoneexpression | tzexpression | nownil | uuidnil | stringuuidnil | md5expression | sha1expression | sha256expression | sha384expression | sha512expression | coalesceexpressionlist | ifexpression | stringlangexpression | stringdtexpression | sametermexpression | isiriexpression | isuriexpression | isblankexpression | isliteralexpression | isnumericexpression | regexexpression | existsfunc | notexistsfunc
+builtincall: aggregate | langexpression | langmatchesexpression | iriexpression | uriexpression | containsexpression | yearexpression | monthexpression | dayexpression | isiriexpression | isuriexpression | isliteralexpression| existsfunc | notexistsfunc
+//stringexpression: "STR" "(" expression ")"
+langexpression: "LANG" "(" expression ")"
+langmatchesexpression: "LANGMATCHES" "(" expression "," expression ")"
+//datatypeexpression: "DATATYPE" "(" expression ")"
+//boundexpression: "BOUND" "(" var ")"
+iriexpression: "IRI" "(" expression ")"
+uriexpression: "URI" "(" expression ")"
+//bnodeexpression: "BNODE" ( "(" expression ")" | NIL )
+//randnil: "RAND" NIL
+//absexpression: "ABS" "(" expression ")"
+//ceilexpression: "CEIL" "(" expression ")"
+//floorexpression: "FLOOR" "(" expression ")"
+//roundexpression: "ROUND" "(" expression ")"
+//concatexpressionlist: "CONCAT" expressionlist
+//stringlengthexpression: "STRLEN" "(" expression ")"
+//ucaseexpression: "UCASE" "(" expression ")"
+//lcaseexpression: "LCASE" "(" expression ")"
+//encodeforuriexpression: "ENCODE_FOR_URI" "(" expression ")"
+containsexpression: "CONTAINS" "(" expression "," expression ")"
+//stringstartsexpression: "STRSTARTS" "(" expression "," expression ")"
+//stringendsexpression: "STRENDS" "(" expression "," expression ")"
+//stringbeforeexpression: "STRBEFORE" "(" expression "," expression ")"
+//stringafterexpression: "STRAFTER" "(" expression "," expression ")"
+yearexpression: "YEAR" "(" expression ")"
+monthexpression: "MONTH" "(" expression ")"
+dayexpression: "DAY" "(" expression ")"
+//hoursexpression: "HOURS" "(" expression ")"
+//minutesexpression: "MINUTES" "(" expression ")"
+//secondsexpression: "SECONDS" "(" expression ")"
+//timezoneexpression: "TIMEZONE" "(" expression ")"
+//tzexpression: "TZ" "(" expression ")"
+//nownil: "NOW" NIL
+//uuidnil: "UUID" NIL
+//stringuuidnil: "STRUUID" NIL
+//md5expression: "MD5" "(" expression ")"
+//sha1expression: "SHA1" "(" expression ")"
+//sha256expression: "SHA256" "(" expression ")"
+//sha384expression: "SHA384" "(" expression ")"
+//sha512expression: "SHA512" "(" expression ")"
+//coalesceexpressionlist: "COALESCE" expressionlist
+//ifexpression: "IF" "(" expression "," expression "," expression ")"
+//stringlangexpression: "STRLANG" "(" expression "," expression ")"
+//stringdtexpression: "STRDT" "(" expression "," expression ")"
+//sametermexpression: "sameTerm" "(" expression "," expression ")"
+isiriexpression: "isIRI" "(" expression ")"
+isuriexpression: "isURI" "(" expression ")"
+//isblankexpression: "isBLANK" "(" expression ")"
+isliteralexpression: "isLITERAL" "(" expression ")"
+isnumericexpression: "isNUMERIC" "(" expression ")"
+//regexexpression: "REGEX" "(" expression "," expression ( "," expression )? ")"
+//substringexpression: "SUBSTR" "(" expression "," expression ( "," expression )? ")"
+//strreplaceexpression: "REPLACE" "(" expression "," expression "," expression ( "," expression )? ")"
+existsfunc: "EXISTS" groupgraphpattern
+notexistsfunc: "NOT EXISTS" groupgraphpattern
+//aggregate: countaggregate | sumaggregate | minaggregate | maxaggregate | avgaggregate | sampleaggregate | groupconcataggregate
+aggregate: countaggregate | sumaggregate | minaggregate | maxaggregate | avgaggregate
+countaggregate: "COUNT" "(" "DISTINCT"? ( "*" | expression ) ")"
+sumaggregate: "SUM" "(" "DISTINCT"? expression ")"
+minaggregate: "MIN" "(" "DISTINCT"? expression ")"
+maxaggregate: "MAX" "(" "DISTINCT"? expression ")"
+avgaggregate: "AVG" "(" "DISTINCT"? expression ")"
+//sampleaggregate: "SAMPLE" "(" "DISTINCT"? expression ")"
+//groupconcataggregate: "GROUP_CONCAT" "(" "DISTINCT"? expression ( ";" "SEPARATOR" "=" string )? ")"
+//iriorfunction: iri arglist?
+//rdfliteral: string ( LANGTAG | ( "^^" iri ) )?
+rdfliteral: string
+//numericliteral: numericliteralunsigned | numericliteralpositive | numericliteralnegative
+numericliteral: "<number>"
+//numericliteralunsigned: INTEGER | DECIMAL | DOUBLE
+//numericliteralpositive: INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE
+//numericliteralnegative: INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE
+booleanliteral: "true" | "false"
+//string: STRING_LITERAL_QUOTE | STRING_LITERAL_SINGLE_QUOTE | STRING_LITERAL_LONG_QUOTE | STRING_LITERAL_LONG_SINGLE_QUOTE
+string: "<string>"
+//iri: IRIREF | prefixedname
+iri: "<iri>"
+//prefixedname: PNAME_LN | PNAME_NS
+//blanknode: BLANK_NODE_LABEL | ANON
+VAR: "<var>"
+//var2: "$" varname
+//varname: (PN_CHARS_U | /[0-9]/) (PN_CHARS_U | /[0-9\u00B7\u0300-\u036F\u203F-\u2040]/)*
+//IRIREF: "<" (/[^\u0000-\u0020<>"\""{}|^`\\]/)* ">"
+//PNAME_NS: PN_PREFIX? ":"
+//PNAME_LN: PNAME_NS PN_LOCAL
+//BLANK_NODE_LABEL: "_:" (PN_CHARS_U | /[0-9]/) ((PN_CHARS | ".")* PN_CHARS)?
+//LANGTAG: "@" /[a-zA-Z]+/ ("-" /[a-zA-Z0-9]+/)*
+//INTEGER: /[0-9]+/
+INTEGER: "<integer>"
+NIL: "<null>"
+//DECIMAL: /[0-9]*/ "." /[0-9]+/
+//DOUBLE: /[0-9]+/ "." /[0-9]*/ EXPONENT | "." /([0-9])+/ EXPONENT | /([0-9])+/ EXPONENT
+//INTEGER_POSITIVE: "+" INTEGER
+//DECIMAL_POSITIVE: "+" DECIMAL
+//DOUBLE_POSITIVE: "+" DOUBLE
+//INTEGER_NEGATIVE: "-" INTEGER
+//DECIMAL_NEGATIVE: "-" DECIMAL
+//DOUBLE_NEGATIVE: "-" DOUBLE
+//EXPONENT: /[eE][+-]?[0-9]+/
+//STRING_LITERAL_QUOTE: "\"" (/[^\u0022\u005C\u000A\u000D]/ | ECHAR )* "\""
+//STRING_LITERAL_SINGLE_QUOTE: "'" (/[^\u0027\u005C\u000A\u000D]/ | ECHAR )* "'"
+//STRING_LITERAL_LONG_SINGLE_QUOTE: "'''" ( "'" | "''" )? (/[^"'"\\]/ | ECHAR )* "'''"
+//STRING_LITERAL_LONG_QUOTE: "\"\"\"" ( "\"" | "\"\"" )? (/[^"\""\\]/ | ECHAR )* "\"\"\""
+//ECHAR: "\\" /[tbnrf"'\\]/
+WS: /[\u0020\u0009\u000D\u000A]/
+//ANON: "[" WS* "]"
+//PN_CHARS_BASE: /[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF]/
+//PN_CHARS_U: PN_CHARS_BASE | "_"
+//PN_CHARS: PN_CHARS_U | /[\-0-9\u00B7\u0300-\u036F\u203F-\u2040]/
+//PN_PREFIX: PN_CHARS_BASE ((PN_CHARS | ".")* PN_CHARS)?
+//PN_LOCAL: (PN_CHARS_U | ":" | /[0-9]/ | PLX) ((PN_CHARS | "." | ":" | PLX)* (PN_CHARS | ":" | PLX))?
+//PLX: PERCENT | PN_LOCAL_ESC
+//PERCENT: "%" HEX~2
+//HEX: /[0-9A-Fa-f]/
+PN_LOCAL_ESC: "\\" /[_~\.\-!$&'()*+,;=\/?#@%]/
+%ignore WS
+COMMENT: "#" /[^\n]/*
+%ignore COMMENT
