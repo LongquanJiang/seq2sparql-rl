@@ -9,7 +9,8 @@ query: selectquery | askquery
 //selectquery: selectclause datasetclause* whereclause solutionmodifier
 selectquery: selectclause whereclause solutionmodifier
 //subselect: selectclause whereclause solutionmodifier valuesclause
-selectclause: "SELECT" ( "DISTINCT" | "REDUCED" )? ( ( var | ( "(" expression "AS" var ")" ) )+ | "*" )
+//selectclause: "SELECT" ( "DISTINCT" | "REDUCED" )? ( ( var | ( "(" expression "AS" var ")" ) )+ | "*" )
+selectclause: "SELECT" "DISTINCT"? ( ( var | ( "(" expression "AS" var ")" ) )+ | "*" )
 //constructquery: "CONSTRUCT" ( constructtemplate datasetclause* whereclause solutionmodifier | datasetclause* "WHERE" "{" triplestemplate? "}" solutionmodifier )
 //describequery: "DESCRIBE" ( varoriri+ | "*" ) datasetclause* whereclause? solutionmodifier
 //askquery: "ASK" datasetclause* whereclause solutionmodifier
