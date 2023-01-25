@@ -260,7 +260,7 @@ WS: /[\u0020\u0009\u000D\u000A]/
 //PLX: PERCENT | PN_LOCAL_ESC
 //PERCENT: "%" HEX~2
 //HEX: /[0-9A-Fa-f]/
-PN_LOCAL_ESC: "\\" /[_~\.\-!$&'()*+,;=\/?#@%]/
+//PN_LOCAL_ESC: "\\" /[_~\.\-!$&'()*+,;=\/?#@%]/
 %ignore WS
 COMMENT: "#" /[^\n]/*
 %ignore COMMENT
