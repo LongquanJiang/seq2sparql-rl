@@ -73,7 +73,8 @@ graphpatternnottriples: grouporuniongraphpattern | filter
 //datablockvalue: iri | rdfliteral | numericliteral | booleanliteral | "UNDEF"
 //datablockvalue: iri | rdfliteral | numericliteral | booleanliteral
 //minusgraphpattern: "MINUS" groupgraphpattern
-grouporuniongraphpattern: groupgraphpattern ( "UNION" groupgraphpattern )*
+//grouporuniongraphpattern: groupgraphpattern ( "UNION" groupgraphpattern )*
+grouporuniongraphpattern: groupgraphpattern
 filter: "FILTER" constraint
 //constraint: brackettedexpression | builtincall | functioncall
 constraint: brackettedexpression | builtincall
