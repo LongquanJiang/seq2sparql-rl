@@ -1,0 +1,140 @@
+?start: query
+query: selectquery | askquery
+selectquery: selectclause whereclause solutionmodifier
+selectclause: "SELECT" distinct_optional varorexpressionasvarrepeatorasterisk
+varorexpressionasvarrepeatorasterisk: var | expressionasvar | asterisk
+expressionasvar: "(" expression "AS" var ")"
+asterisk: "*"
+distinct_optional: distinct
+distinct: "DISTINCT"
+askquery: "ASK" whereclause solutionmodifier
+whereclause: where_optional groupgraphpattern
+where_optional: where
+where: "WHERE"
+solutionmodifier: groupclause_optional havingclause_optional orderclause_optional limitoffsetclauses_optional
+groupclause_optional: groupclause
+havingclause_optional: havingclause
+orderclause_optional: orderclause
+limitoffsetclauses_optional: limitoffsetclauses
+groupclause: "GROUP BY" groupcondition
+groupcondition: builtincall | expressionasvar_optional | var
+expressionasvar_optional: "(" expression asvar_optional ")"
+asvar_optional: asvar
+asvar: "AS" var
+havingclause: "HAVING" constraint
+orderclause: "ORDER BY" ordercondition
+//ordercondition_repeat: ordercondition
+ordercondition: ascordescbrackettedexpression | constraintorvar
+ascordescbrackettedexpression: ascordesc brackettedexpression
+constraintorvar: constraint | var
+ascordesc: asc | desc
+asc: "ASC"
+desc: "DESC"
+limitoffsetclauses: limitoffsetoptionalclauses | offsetlimitoptionalclauses
+limitoffsetoptionalclauses: limitclause offsetclause_optional
+offsetlimitoptionalclauses: offsetclause limitclause_optional
+offsetclause_optional: offsetclause
+limitclause_optional: limitclause
+limitclause : "LIMIT" integer
+offsetclause: "OFFSET" integer
+groupgraphpattern: "{" groupgraphpatternsub "}"
+groupgraphpatternsub: triplesblock_optional graphpatternnottriplesdottriplesblock_star
+graphpatternnottriplesdottriplesblock_star: graphpatternnottriplesdottriplesblock
+graphpatternnottriplesdottriplesblock: graphpatternnottriples dot_optional triplesblock_optional
+triplesblock_optional: triplesblock
+dot_optional: dot
+dot: "."
+triplesblock: triplessamesubjectpath dottriplesblock_optional_optional
+dottriplesblock_optional_optional: dottriplesblock_optional
+dottriplesblock_optional: "." triplesblock_optional
+graphpatternnottriples: groupgraphpattern
+constraint: brackettedexpression | builtincall
+expressionlist: nil | "(" expression commaexpression_star ")"
+commaexpression_star: commaexpression
+commaexpression: "," expression
+triplessamesubjectpath: varortermpropertylistpathnotempty | triplesnodepathpropertylistpath
+triplesnodepathpropertylistpath: triplesnodepath propertylistpath
+varortermpropertylistpathnotempty: varorterm propertylistpathnotempty
+propertylistpath: propertylistpathnotempty
+propertylistpathnotempty: varoriri graphnodepath
+triplesnode: "(" graphnode_repeat ")"
+triplesnodepath: "(" graphnodepath_repeat ")"
+graphnode: varorterm | triplesnode
+graphnodepath: varorterm | triplesnodepath
+graphnode_repeat: graphnode
+graphnodepath_repeat: graphnodepath
+varorterm: var | graphterm
+varoriri: var | iri
+graphterm: iri | rdfliteral | numericliteral | booleanliteral | nil
+expression: conditionalorexpression
+conditionalorexpression: conditionalandexpression logicorconditionalandexpression_star
+logicorconditionalandexpression_star: logicorconditionalandexpression
+logicorconditionalandexpression: "||" conditionalandexpression
+conditionalandexpression: valuelogical logicandvaluelogical_star
+logicandvaluelogical_star: logicandvaluelogical
+logicandvaluelogical: "&&" valuelogical
+valuelogical: relationalexpression
+relationalexpression: numericexpression enlmlminnumericalexpression_optional
+enlmlminnumericalexpression_optional: enlmlminnumericalexpression
+enlmlminnumericalexpression: equalnumericexpression | notequalnumericexpression | lessnumericexpression | morenumericexpression | lesseqnumericexpression | moreeqnumericexpression | inexpressionlist | notinexpressionlist
+notequalnumericexpression: "!=" numericexpression
+lessnumericexpression: "<" numericexpression
+morenumericexpression: ">" numericexpression
+lesseqnumericexpression: "<=" numericexpression
+moreeqnumericexpression: ">=" numericexpression
+equalnumericexpression: "=" numericexpression
+inexpressionlist: "IN" expressionlist
+notinexpressionlist: "NOT IN" expressionlist
+numericexpression: additiveexpression
+additiveexpression: multiplicativeexpression pmnamultiplicativeexpression_star
+pmnamultiplicativeexpression_star: pmnamultiplicativeexpression
+pmnmultiplicativeexpression_optional: plusmultiplicativeexpression | minusmultiplicativeexpression | numericliteral
+pmnamultiplicativeexpression: pmnmultiplicativeexpression_optional asteriskorslashunaryexpression_star
+plusmultiplicativeexpression: "+" multiplicativeexpression
+minusmultiplicativeexpression: "-" multiplicativeexpression
+asteriskunaryexpression: "*" unaryexpression
+slashunaryexpression: "/" unaryexpression
+asteriskorslashunaryexpression: asteriskunaryexpression | slashunaryexpression
+asteriskorslashunaryexpression_star: asteriskorslashunaryexpression
+multiplicativeexpression: unaryexpression asteriskorslashunaryexpression_star
+unaryexpression: exclaimationunaryexpression | plusprimaryexpression | minusprimaryexpression | primaryexpression
+exclaimationunaryexpression: "!" primaryexpression
+plusprimaryexpression: "+" primaryexpression
+minusprimaryexpression: "-" primaryexpression
+primaryexpression: brackettedexpression | builtincall | iri | rdfliteral | numericliteral | booleanliteral | var
+brackettedexpression: "(" expression ")"
+builtincall: aggregate | langexpression | langmatchesexpression | iriexpression | uriexpression | containsexpression | yearexpression | monthexpression | dayexpression | isiriexpression | isuriexpression | isliteralexpression| existsfunc | notexistsfunc
+langexpression: "LANG" "(" expression ")"
+langmatchesexpression: "LANGMATCHES" "(" expression "," expression ")"
+iriexpression: "IRI" "(" expression ")"
+uriexpression: "URI" "(" expression ")"
+containsexpression: "CONTAINS" "(" expression "," expression ")"
+yearexpression: "YEAR" "(" expression ")"
+monthexpression: "MONTH" "(" expression ")"
+dayexpression: "DAY" "(" expression ")"
+isiriexpression: "isIRI" "(" expression ")"
+isuriexpression: "isURI" "(" expression ")"
+isliteralexpression: "isLITERAL" "(" expression ")"
+isnumericexpression: "isNUMERIC" "(" expression ")"
+existsfunc: "EXISTS" groupgraphpattern
+notexistsfunc: "NOT EXISTS" groupgraphpattern
+aggregate: countaggregate | sumaggregate | minaggregate | maxaggregate | avgaggregate
+countaggregate: "COUNT" "(" distinct_optional asteriskorexpression ")"
+asteriskorexpression: asterisk | expression
+sumaggregate: "SUM" "(" distinct_optional expression ")"
+minaggregate: "MIN" "(" distinct_optional expression ")"
+maxaggregate: "MAX" "(" distinct_optional expression ")"
+avgaggregate: "AVG" "(" distinct_optional expression ")"
+rdfliteral: "<string>"
+numericliteral: "<number>"
+booleanliteral: true | false
+iri: "<iri>"
+var: "<var>"
+nil: "<null>"
+integer: "<integer>"
+true: "true"
+false: "flase"
+WS: /[\u0020\u0009\u000D\u000A]/
+%ignore WS
+COMMENT: "#" /[^\n]/*
+%ignore COMMENT

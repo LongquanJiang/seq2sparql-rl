@@ -55,7 +55,7 @@ offsetclause: "OFFSET" integer
 //quaddata: "{" quads "}"
 //quads: triplestemplate? ( quadsnottriples "."? triplestemplate? )*
 //quadsnottriples: "GRAPH" varoriri "{" triplestemplate? "}"
-triplestemplate: triplessamesubject ( "." triplestemplate? )?
+//triplestemplate: triplessamesubject ( "." triplestemplate? )?
 //groupgraphpattern: "{" ( subselect | groupgraphpatternsub ) "}"
 groupgraphpattern: "{" groupgraphpatternsub "}"
 groupgraphpatternsub: triplesblock? ( graphpatternnottriples "."? triplesblock? )*
@@ -83,48 +83,47 @@ constraint: brackettedexpression | builtincall
 expressionlist: NIL | "(" expression ( "," expression )* ")"
 //constructtemplate: "{" constructtriples? "}"
 //constructtriples: triplessamesubject ( "." constructtriples? )?
-triplessamesubject: varorterm propertylistnotempty | triplesnode propertylist
-propertylist: propertylistnotempty?
-propertylistnotempty: verb objectlist ( ";" ( verb objectlist )? )*
+//triplessamesubject: varorterm propertylistnotempty | triplesnode propertylist
+//propertylist: propertylistnotempty?
+//propertylistnotempty: verb objectlist ( ";" ( verb objectlist )? )*
+//propertylistnotempty: varoriri graphnode
 //verb: varoriri | "a"
-verb: varoriri
-objectlist: object ( "," object )*
-object: graphnode
+//objectlist: object ( "," object )*
+//object: graphnode
 //triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
 triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
 propertylistpath: propertylistpathnotempty?
 //propertylistpathnotempty: ( verbpath | verbsimple ) objectlistpath ( ";" ( ( verbpath | verbsimple ) objectlist )? )*
-propertylistpathnotempty: ( verbpath | verbsimple ) objectlistpath
-verbpath: path
-verbsimple: var
+propertylistpathnotempty: varoriri graphnodepath
+//verbpath: path
+//verbsimple: var
 //objectlistpath: objectpath ( "," objectpath )*
-objectlistpath: objectpath
-objectpath: graphnodepath
-path: pathalternative
+//objectpath: graphnodepath
+//path: pathalternative
 //pathalternative: pathsequence ( "|" pathsequence )*
-pathalternative: pathsequence
+//pathalternative: pathsequence
 //pathsequence: patheltorinverse ( "/" patheltorinverse )*
-pathsequence: patheltorinverse
+//pathsequence: patheltorinverse
 //pathelt: pathprimary pathmod?
-pathelt: pathprimary
+//pathelt: pathprimary
 //patheltorinverse: pathelt | "^" pathelt
-patheltorinverse: pathelt
+//patheltorinverse: pathelt
 //pathmod: "?" | "*" | "+"
 //pathprimary: iri | "a" | "!" pathnegatedpropertyset | "(" path ")"
 //pathprimary: iri | "!" pathnegatedpropertyset | "(" path ")"
-pathprimary: iri
+//pathprimary: iri
 //pathnegatedpropertyset: pathoneinpropertyset | "(" ( pathoneinpropertyset ( "|" pathoneinpropertyset )* )? ")"
 //pathoneinpropertyset: iri | "a" | "^" ( iri | "a" )
 //pathoneinpropertyset: iri | "^" iri
 integer: INTEGER
 //triplesnode: collection | blanknodepropertylist
-triplesnode: collection
+triplesnode: "(" graphnode+ ")"
 //blanknodepropertylist: "[" propertylistnotempty "]"
 //triplesnodepath: collectionpath | blanknodepropertylistpath
-triplesnodepath: collectionpath
+triplesnodepath: "(" graphnodepath+ ")"
 //blanknodepropertylistpath: "[" propertylistpathnotempty "]"
-collection: "(" graphnode+ ")"
-collectionpath: "(" graphnodepath+ ")"
+//collection: "(" graphnode+ ")"
+//collectionpath: "(" graphnodepath+ ")"
 graphnode: varorterm | triplesnode
 graphnodepath: varorterm | triplesnodepath
 varorterm: var | graphterm
@@ -213,17 +212,19 @@ avgaggregate: "AVG" "(" "DISTINCT"? expression ")"
 //groupconcataggregate: "GROUP_CONCAT" "(" "DISTINCT"? expression ( ";" "SEPARATOR" "=" string )? ")"
 //iriorfunction: iri arglist?
 //rdfliteral: string ( LANGTAG | ( "^^" iri ) )?
-rdfliteral: string
+rdfliteral: STRING
 //numericliteral: numericliteralunsigned | numericliteralpositive | numericliteralnegative
-numericliteral: "<number>"
+numericliteral: NUMBER
+NUMBER: "<number>"
 //numericliteralunsigned: INTEGER | DECIMAL | DOUBLE
 //numericliteralpositive: INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE
 //numericliteralnegative: INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE
 booleanliteral: "true" | "false"
 //string: STRING_LITERAL_QUOTE | STRING_LITERAL_SINGLE_QUOTE | STRING_LITERAL_LONG_QUOTE | STRING_LITERAL_LONG_SINGLE_QUOTE
-string: "<string>"
+STRING: "<string>"
 //iri: IRIREF | prefixedname
-iri: "<iri>"
+iri: IRI
+IRI: "<iri>"
 //prefixedname: PNAME_LN | PNAME_NS
 //blanknode: BLANK_NODE_LABEL | ANON
 VAR: "<var>"
