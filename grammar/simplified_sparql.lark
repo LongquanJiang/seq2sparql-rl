@@ -11,32 +11,23 @@ askquery: "ASK" whereclause solutionmodifier
 whereclause: where_optional groupgraphpattern
 where_optional: where
 where: "WHERE"
-solutionmodifier: groupclause_optional havingclause_optional orderclause_optional limitoffsetclauses_optional
+solutionmodifier: groupclause_optional orderclause_optional limitclause_optional
 groupclause_optional: groupclause
-havingclause_optional: havingclause
 orderclause_optional: orderclause
-limitoffsetclauses_optional: limitoffsetclauses
+limitclause_optional: limitclause
 groupclause: "GROUP BY" groupcondition
-groupcondition: builtincall | expressionasvar_optional | var
-expressionasvar_optional: "(" expression asvar_optional ")"
+groupcondition: builtincall | expressionasvaroptional | var
+expressionasvaroptional: "(" expression asvar_optional ")"
 asvar_optional: asvar
 asvar: "AS" var
-havingclause: "HAVING" constraint
 orderclause: "ORDER BY" ordercondition
-//ordercondition_repeat: ordercondition
 ordercondition: ascordescbrackettedexpression | constraintorvar
 ascordescbrackettedexpression: ascordesc brackettedexpression
 constraintorvar: constraint | var
 ascordesc: asc | desc
 asc: "ASC"
 desc: "DESC"
-limitoffsetclauses: limitoffsetoptionalclauses | offsetlimitoptionalclauses
-limitoffsetoptionalclauses: limitclause offsetclause_optional
-offsetlimitoptionalclauses: offsetclause limitclause_optional
-offsetclause_optional: offsetclause
-limitclause_optional: limitclause
 limitclause : "LIMIT" integer
-offsetclause: "OFFSET" integer
 groupgraphpattern: "{" groupgraphpatternsub "}"
 groupgraphpatternsub: triplesblock_optional graphpatternnottriplesdottriplesblock_star
 graphpatternnottriplesdottriplesblock_star: graphpatternnottriplesdottriplesblock
@@ -44,25 +35,17 @@ graphpatternnottriplesdottriplesblock: graphpatternnottriples dot_optional tripl
 triplesblock_optional: triplesblock
 dot_optional: dot
 dot: "."
-triplesblock: triplessamesubjectpath dottriplesblock_optional_optional
-dottriplesblock_optional_optional: dottriplesblock_optional
-dottriplesblock_optional: "." triplesblock_optional
-graphpatternnottriples: groupgraphpattern
+triplesblock: triplessamesubjectpath dottriplesblockoptional_optional
+dottriplesblockoptional_optional: dottriplesblockoptional
+dottriplesblockoptional: "." triplesblock_optional
+graphpatternnottriples: groupgraphpattern | filter
+filter: "FILTER" constraint
 constraint: brackettedexpression | builtincall
 expressionlist: nil | "(" expression commaexpression_star ")"
 commaexpression_star: commaexpression
 commaexpression: "," expression
-triplessamesubjectpath: varortermpropertylistpathnotempty | triplesnodepathpropertylistpath
-triplesnodepathpropertylistpath: triplesnodepath propertylistpath
-varortermpropertylistpathnotempty: varorterm propertylistpathnotempty
-propertylistpath: propertylistpathnotempty
-propertylistpathnotempty: varoriri graphnodepath
-triplesnode: "(" graphnode_repeat ")"
-triplesnodepath: "(" graphnodepath_repeat ")"
-graphnode: varorterm | triplesnode
-graphnodepath: varorterm | triplesnodepath
-graphnode_repeat: graphnode
-graphnodepath_repeat: graphnodepath
+triplessamesubjectpath: varorterm propertylistpathnotempty
+propertylistpathnotempty: varoriri varorterm
 varorterm: var | graphterm
 varoriri: var | iri
 graphterm: iri | rdfliteral | numericliteral | booleanliteral | nil
@@ -86,10 +69,11 @@ equalnumericexpression: "=" numericexpression
 inexpressionlist: "IN" expressionlist
 notinexpressionlist: "NOT IN" expressionlist
 numericexpression: additiveexpression
-additiveexpression: multiplicativeexpression pmnamultiplicativeexpression_star
-pmnamultiplicativeexpression_star: pmnamultiplicativeexpression
-pmnmultiplicativeexpression_optional: plusmultiplicativeexpression | minusmultiplicativeexpression | numericliteral
-pmnamultiplicativeexpression: pmnmultiplicativeexpression_optional asteriskorslashunaryexpression_star
+additiveexpression: multiplicativeexpression pmnmultiplicativeexpressionoptional_star
+pmnmultiplicativeexpressionoptional_star: pmnmultiplicativeexpression_optional
+numericalasasteriskorslashunaryexpressionstar: numericliteral asteriskorslashunaryexpression_star
+pmnmultiplicativeexpression_optional: pmnmultiplicativeexpression
+pmnmultiplicativeexpression: plusmultiplicativeexpression | minusmultiplicativeexpression | numericalasasteriskorslashunaryexpressionstar
 plusmultiplicativeexpression: "+" multiplicativeexpression
 minusmultiplicativeexpression: "-" multiplicativeexpression
 asteriskunaryexpression: "*" unaryexpression

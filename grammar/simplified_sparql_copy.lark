@@ -20,15 +20,16 @@ askquery: "ASK" whereclause solutionmodifier
 //namedgraphclause: "NAMED" sourceselector
 //sourceselector: iri
 whereclause: "WHERE"? groupgraphpattern
-solutionmodifier: groupclause? havingclause? orderclause? limitoffsetclauses?
+//solutionmodifier: groupclause? havingclause? orderclause? limitoffsetclauses?
+solutionmodifier: groupclause? orderclause? limitclause?
 groupclause: "GROUP" "BY" groupcondition+
 //groupcondition: builtincall | functioncall | "(" expression ( "AS" var )? ")" | var
 groupcondition: builtincall | "(" expression ( "AS" var )? ")" | var
-havingclause: "HAVING" havingcondition+
-havingcondition: constraint
+//havingclause: "HAVING" havingcondition+
+//havingcondition: constraint
 orderclause: "ORDER" "BY" ordercondition+
 ordercondition: ( ( "ASC" | "DESC" ) brackettedexpression ) | ( constraint | var )
-limitoffsetclauses: limitclause offsetclause? | offsetclause limitclause?
+//limitoffsetclauses: limitclause offsetclause? | offsetclause limitclause?
 limitclause : "LIMIT" integer
 offsetclause: "OFFSET" integer
 //valuesclause: ( "VALUES" datablock )?
@@ -61,7 +62,7 @@ groupgraphpattern: "{" groupgraphpatternsub "}"
 groupgraphpatternsub: triplesblock? ( graphpatternnottriples "."? triplesblock? )*
 triplesblock: triplessamesubjectpath ( "." triplesblock? )?
 //graphpatternnottriples: grouporuniongraphpattern | optionalgraphpattern | minusgraphpattern | graphgraphpattern | servicegraphpattern | filter | bind | inlinedata
-graphpatternnottriples: grouporuniongraphpattern | filter
+graphpatternnottriples: groupgraphpattern | filter
 //optionalgraphpattern: "OPTIONAL" groupgraphpattern
 //graphgraphpattern: "GRAPH" varoriri groupgraphpattern
 //servicegraphpattern: "SERVICE" "SILENT"? varoriri groupgraphpattern
@@ -74,7 +75,6 @@ graphpatternnottriples: grouporuniongraphpattern | filter
 //datablockvalue: iri | rdfliteral | numericliteral | booleanliteral
 //minusgraphpattern: "MINUS" groupgraphpattern
 //grouporuniongraphpattern: groupgraphpattern ( "UNION" groupgraphpattern )*
-grouporuniongraphpattern: groupgraphpattern
 filter: "FILTER" constraint
 //constraint: brackettedexpression | builtincall | functioncall
 constraint: brackettedexpression | builtincall
@@ -91,10 +91,10 @@ expressionlist: NIL | "(" expression ( "," expression )* ")"
 //objectlist: object ( "," object )*
 //object: graphnode
 //triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
-triplessamesubjectpath: varorterm propertylistpathnotempty | triplesnodepath propertylistpath
-propertylistpath: propertylistpathnotempty?
+triplessamesubjectpath: varorterm varoriri varorterm
+//propertylistpath: propertylistpathnotempty?
 //propertylistpathnotempty: ( verbpath | verbsimple ) objectlistpath ( ";" ( ( verbpath | verbsimple ) objectlist )? )*
-propertylistpathnotempty: varoriri graphnodepath
+//propertylistpathnotempty: varoriri varorterm
 //verbpath: path
 //verbsimple: var
 //objectlistpath: objectpath ( "," objectpath )*
@@ -117,15 +117,15 @@ propertylistpathnotempty: varoriri graphnodepath
 //pathoneinpropertyset: iri | "^" iri
 integer: INTEGER
 //triplesnode: collection | blanknodepropertylist
-triplesnode: "(" graphnode+ ")"
+//triplesnode: "(" graphnode+ ")"
 //blanknodepropertylist: "[" propertylistnotempty "]"
 //triplesnodepath: collectionpath | blanknodepropertylistpath
-triplesnodepath: "(" graphnodepath+ ")"
+//triplesnodepath: "(" graphnodepath+ ")"
 //blanknodepropertylistpath: "[" propertylistpathnotempty "]"
 //collection: "(" graphnode+ ")"
 //collectionpath: "(" graphnodepath+ ")"
-graphnode: varorterm | triplesnode
-graphnodepath: varorterm | triplesnodepath
+//graphnode: varorterm
+//graphnodepath: varorterm
 varorterm: var | graphterm
 varoriri: var | iri
 //var: var1 | var2

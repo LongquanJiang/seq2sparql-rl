@@ -1,106 +1,147 @@
+import lark
+from lark import Lark, Transformer, Tree, Token
+from lark.grammar import NonTerminal, Terminal
 
-import json
-import pickle
-import requests
-import networkx as nx
-from copy import deepcopy
-from typing import List
-from networkx import DiGraph
+sparql_grammar = open("simplified_sparql.lark", "r").read()
+sparql_lark = Lark(sparql_grammar, start="start", parser="earley", keep_all_tokens=True)
 
-def format_sparql(sparql: str) -> str:
-    url = "http://localhost:8080/format"
-    data = {"sparql": sparql}
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, data=json.dumps(data), headers=headers)
-    response = json.JSONDecoder().decode(response.text)["data"]
-    return response
+generated_query = []
 
-class SparqlGrammar(object):
+multipleoptions_rules = ["query", "varorexpressionasvarrepeatorasterisk", "groupcondition", "constraintorvar", "ordercondition", "ascordesc", "constraint",
+                         "graphpatternnottriples", "expressionlist", "varorterm", "varoriri", "graphterm", "enlmlminnumericalexpression", "pmnmultiplicativeexpression",
+                         "asteriskorslashunaryexpression", "unaryexpression", "primaryexpression", "builtincall", "aggregate", "asteriskorexpression", "booleanliteral"]
 
-    def __init__(self) -> None:
+optional_rules = ["distinct_optional",
+                  "where_optional",
+                  "groupclause_optional",
+                  "orderclause_optional",
+                  "limitclause_optional",
+                  "asvar_optional",
+                  "triplesblock_optional",
+                  "dot_optional",
+                  "dottriplesblockoptional_optional",
+                  "enlmlminnumericalexpression_optional",
+                  "pmnmultiplicativeexpression_optional"]
 
-        self.sparql_grammar_graph = pickle.load(open("./grammar.pickle", "rb"))
-        self.select_grammar_graph = pickle.load((open("./select_grammar.pickle", "rb")))
-        self.ask_grammar_graph = pickle.load((open("./ask_grammar.pickle", "rb")))
-        self.where_grammar_graph = pickle.load((open("./where_grammar.pickle", "rb")))
-        self.solution_grammar_graph = pickle.load((open("./solution_grammar.pickle", "rb")))
+plus_rules = ["expressionasvar",
+              "groupcondition",
+              "ordercondition"]
 
-        self.intent = ""
-
-        self.initialize()
-
-    def initialize(self) -> None:
-
-        nodes = deepcopy(self.sparql_grammar_graph.nodes)
-        nodes = sorted(nodes)
-
-        self.keyword2id = {k: v for k, v in zip(nodes, range(len(nodes)))}
-        self.id2keyword = {v: k for k, v in self.keyword2id.items()}
+star_rules = ["graphpatternnottriplesdottriplesblock_star",
+              "commaexpression_star",
+              "logicorconditionalandexpression_star",
+              "logicandvaluelogical_star",
+              "pmnmultiplicativeexpressionoptional_star",
+              "asteriskorslashunaryexpression_star"]
 
 
-    def keywords(self) -> List:
-        return list(self.keyword2id.keys())
+def find_first_non_terminal(query):
 
-    def get_possible_next_keywords(self, sparql):
+    for idx, q in enumerate(query):
 
-        if sparql == "":
-            return ["SELECT", "ASK"]
+        if isinstance(q, NonTerminal):
+            return idx, q
 
-        last_word = sparql.split()[-1]
-
-        if "SELECT" in sparql:
-            self.intent = "SELECT"
-        elif "ASK" in sparql:
-            self.intent = "ASK"
-
-        return self.extract_successors(last_word)
+    return -1, None
 
 
-    def extract_successors(self, node):
-        if self.intent == "SELECT":
-            return [edge[1] for edge in self.select_grammar_graph.out_edges(node)]
-        elif self.intent == "ASK":
-            return [edge[1] for edge in self.ask_grammar_graph.out_edges(node)]
+def flatten_grammar_rule(rule_def):
 
-    def _validate(self, sequence: str) -> bool:
-        stack = []
-        opening = set('([{')
-        closing = set(')]}')
-        pair = {')': '(', ']': '[', '}': '{'}
-        for i in sequence:
-            if i in opening:
-                stack.append(i)
-            if i in closing:
-                if not stack:
-                    return False
-                elif stack.pop() != pair[i]:
-                    return False
-                else:
-                    continue
-        if not stack:
-            return True
+    rtn = []
+    children = [rule_def[2]]
+    while len(children) != 0:
+
+        pointer = children.pop(0)
+
+        if pointer.data == "value":
+            name_pointer = pointer.children[0]
+            if isinstance(name_pointer, Tree):
+                if name_pointer.data == "literal":
+                    rtn.append(name_pointer.children[0])
+            elif isinstance(name_pointer, NonTerminal):
+                rtn.append(name_pointer)
         else:
-            return False
-
-    def _format(self, sparql) -> str:
-        return format_sparql(sparql)
-
-    def parseQuery(self, query: str):
-        pass
+            children = pointer.children + children
+    return rtn
 
 
+def get_grammar_rule_by_name(name):
+    rule_defs = sparql_lark.grammar.rule_defs
+    for rule_def in rule_defs:
+        if rule_def[0] == name:
+            return rule_def
+
+def get_node_from_rule_by_name(rule, name):
+    for node in rule:
+        if node.name == name:
+            return node
+    return None
+
+
+def print_sparql_query(query):
+    for q in query: print(q)
 
 if __name__ == '__main__':
 
-    sparql_grammar = SparqlGrammar()
+    time_step = -1
 
-    sparql = ""
-    print(sparql_grammar.get_possible_next_keywords(sparql))
     while True:
-        inp = input(f"Please enter: {sparql} ")
-        if sparql == "":
-            sparql = inp
-        else:
-            sparql += " "+inp
-        print(sparql_grammar.get_possible_next_keywords(sparql))
 
+        time_step += 1
+
+        if time_step == 0:
+            initial_rule_def = get_grammar_rule_by_name("start")
+            initial_rule = flatten_grammar_rule(initial_rule_def)
+            generated_query = initial_rule
+            print(f"\nTime Step {time_step}: ")
+            print_sparql_query(generated_query)
+            continue
+
+        idx, action = find_first_non_terminal(generated_query)
+
+        if idx == -1: # terminate the loop if there is no any non-terminal
+            break
+
+        if action.name in optional_rules or action.name in plus_rules or action.name in star_rules or action.name in multipleoptions_rules:
+
+            current_rule_def = get_grammar_rule_by_name(action.name)
+            current_rule = flatten_grammar_rule(current_rule_def)
+
+            print(f"\nCurrent rule: {current_rule}")
+            if action.name in optional_rules or action.name in multipleoptions_rules:
+                if action.name in multipleoptions_rules:
+                    inp = input("Please choose a grammar rule: ").strip()
+                    node = get_node_from_rule_by_name(current_rule, inp)
+                    generated_query = generated_query[0:idx] + [node] + generated_query[idx + 1:]
+                else:
+                    inp = input("Do you keep it or not? (yes/no): ").strip()
+                    if inp == "no":
+                        generated_query = generated_query[0:idx] + generated_query[idx+1:]
+                    else:
+                        generated_query = generated_query[0:idx] + current_rule + generated_query[idx + 1:]
+
+            elif action.name in plus_rules:
+                inp = input("Repeat or not repeat this grammar rule? (yes/no): ").strip()
+                if inp == "yes":
+                    generated_query = generated_query[0:idx+1] + [action] + generated_query[idx+1:]
+                    generated_query = generated_query[0:idx] + current_rule + generated_query[idx + 1:]
+                elif inp == "no":
+                    generated_query = generated_query[0:idx] + current_rule + generated_query[idx+1:]
+            elif action.name in star_rules:
+                inp = input("Repeat, not repeat or make it empty? (repeat/notrepeat/nil): ").strip()
+                if inp == "repeat":
+                    generated_query = generated_query[0:idx+1] + [action] + generated_query[idx+1:]
+                    generated_query = generated_query[0:idx] + current_rule + generated_query[idx + 1:]
+                elif inp == "notrepeat":
+                    generated_query = generated_query[0:idx] + current_rule + generated_query[idx+1:]
+                elif inp == "nil":
+                    generated_query = generated_query[0:idx] + generated_query[idx+1:]
+        else:
+            new_rule_def = get_grammar_rule_by_name(action.name)
+            new_rule = flatten_grammar_rule(new_rule_def)
+            generated_query = generated_query[0:idx] + new_rule + generated_query[idx+1:]
+
+        print(f"\nTime Step {time_step}:")
+        print_sparql_query(generated_query)
+    print(f"\nTime Step {time_step}:")
+    print_sparql_query(generated_query)
