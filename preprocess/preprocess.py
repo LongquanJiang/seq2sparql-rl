@@ -1,14 +1,8 @@
 import sys
 sys.path.append("..")
 
-import os
-import json
 import argparse
-from time import sleep
 from utils import KB_query, utils
-from gensim.corpora import Dictionary
-from gensim.utils import simple_preprocess
-from smart_open import smart_open
 
 
 PREFIXES_WIKIDATA = {
