@@ -22,12 +22,12 @@ askquery: "ASK" whereclause solutionmodifier
 whereclause: "WHERE"? groupgraphpattern
 //solutionmodifier: groupclause? havingclause? orderclause? limitoffsetclauses?
 solutionmodifier: groupclause? orderclause? limitclause?
-groupclause: "GROUP" "BY" groupcondition+
+groupclause: "GROUP BY" groupcondition+
 //groupcondition: builtincall | functioncall | "(" expression ( "AS" var )? ")" | var
 groupcondition: builtincall | "(" expression ( "AS" var )? ")" | var
 //havingclause: "HAVING" havingcondition+
 //havingcondition: constraint
-orderclause: "ORDER" "BY" ordercondition+
+orderclause: "ORDER BY" ordercondition+
 ordercondition: ( ( "ASC" | "DESC" ) brackettedexpression ) | ( constraint | var )
 //limitoffsetclauses: limitclause offsetclause? | offsetclause limitclause?
 limitclause : "LIMIT" integer

@@ -1,90 +1,39 @@
-?start: query
+start: queryunit
+queryunit: query
 query: selectquery | askquery
 selectquery: selectclause whereclause solutionmodifier
-selectclause: "SELECT" distinct_optional varorexpressionasvarrepeatorasterisk
-varorexpressionasvarrepeatorasterisk: var | expressionasvar | asterisk
-expressionasvar: "(" expression "AS" var ")"
-asterisk: "*"
-distinct_optional: distinct
-distinct: "DISTINCT"
+selectclause: "SELECT" "DISTINCT"? ( ( var | ( "(" expression "AS" var ")" ) )+ | "*" )
 askquery: "ASK" whereclause solutionmodifier
-whereclause: where_optional groupgraphpattern
-where_optional: where
-where: "WHERE"
-solutionmodifier: groupclause_optional orderclause_optional limitclause_optional
-groupclause_optional: groupclause
-orderclause_optional: orderclause
-limitclause_optional: limitclause
-groupclause: "GROUP BY" groupcondition
-groupcondition: builtincall | expressionasvaroptional | var
-expressionasvaroptional: "(" expression asvar_optional ")"
-asvar_optional: asvar
-asvar: "AS" var
-orderclause: "ORDER BY" ordercondition
-ordercondition: ascordescbrackettedexpression | constraintorvar
-ascordescbrackettedexpression: ascordesc brackettedexpression
-constraintorvar: constraint | var
-ascordesc: asc | desc
-asc: "ASC"
-desc: "DESC"
+whereclause: "WHERE"? groupgraphpattern
+solutionmodifier: groupclause? orderclause? limitclause?
+groupclause: "GROUP BY" groupcondition+
+groupcondition: builtincall | "(" expression ( "AS" var )? ")" | var
+orderclause: "ORDER BY" ordercondition+
+ordercondition: ( ( "ASC" | "DESC" ) brackettedexpression ) | ( constraint | var )
 limitclause : "LIMIT" integer
+offsetclause: "OFFSET" integer
 groupgraphpattern: "{" groupgraphpatternsub "}"
-groupgraphpatternsub: triplesblock_optional graphpatternnottriplesdottriplesblock_star
-graphpatternnottriplesdottriplesblock_star: graphpatternnottriplesdottriplesblock
-graphpatternnottriplesdottriplesblock: graphpatternnottriples dot_optional triplesblock_optional
-triplesblock_optional: triplesblock
-dot_optional: dot
-dot: "."
-triplesblock: triplessamesubjectpath dottriplesblockoptional_optional
-dottriplesblockoptional_optional: dottriplesblockoptional
-dottriplesblockoptional: "." triplesblock_optional
+groupgraphpatternsub: triplesblock? ( graphpatternnottriples "."? triplesblock? )*
+triplesblock: triplessamesubjectpath ( "." triplesblock? )?
 graphpatternnottriples: groupgraphpattern | filter
 filter: "FILTER" constraint
 constraint: brackettedexpression | builtincall
-expressionlist: nil | "(" expression commaexpression_star ")"
-commaexpression_star: commaexpression
-commaexpression: "," expression
-triplessamesubjectpath: varorterm propertylistpathnotempty
-propertylistpathnotempty: varoriri varorterm
+expressionlist: NIL | "(" expression ( "," expression )* ")"
+triplessamesubjectpath: varorterm varoriri varorterm
+integer: INTEGER
 varorterm: var | graphterm
 varoriri: var | iri
-graphterm: iri | rdfliteral | numericliteral | booleanliteral | nil
+var: VAR
+graphterm: iri | rdfliteral | numericliteral | booleanliteral | NIL
 expression: conditionalorexpression
-conditionalorexpression: conditionalandexpression logicorconditionalandexpression_star
-logicorconditionalandexpression_star: logicorconditionalandexpression
-logicorconditionalandexpression: "||" conditionalandexpression
-conditionalandexpression: valuelogical logicandvaluelogical_star
-logicandvaluelogical_star: logicandvaluelogical
-logicandvaluelogical: "&&" valuelogical
+conditionalorexpression: conditionalandexpression ( "||" conditionalandexpression )*
+conditionalandexpression: valuelogical ( "&&" valuelogical )*
 valuelogical: relationalexpression
-relationalexpression: numericexpression enlmlminnumericalexpression_optional
-enlmlminnumericalexpression_optional: enlmlminnumericalexpression
-enlmlminnumericalexpression: equalnumericexpression | notequalnumericexpression | lessnumericexpression | morenumericexpression | lesseqnumericexpression | moreeqnumericexpression | inexpressionlist | notinexpressionlist
-notequalnumericexpression: "!=" numericexpression
-lessnumericexpression: "<" numericexpression
-morenumericexpression: ">" numericexpression
-lesseqnumericexpression: "<=" numericexpression
-moreeqnumericexpression: ">=" numericexpression
-equalnumericexpression: "=" numericexpression
-inexpressionlist: "IN" expressionlist
-notinexpressionlist: "NOT IN" expressionlist
+relationalexpression: numericexpression ( "=" numericexpression | "!=" numericexpression | "<" numericexpression | ">" numericexpression | "<=" numericexpression | ">=" numericexpression | "IN" expressionlist | "NOT" "IN" expressionlist )?
 numericexpression: additiveexpression
-additiveexpression: multiplicativeexpression pmnmultiplicativeexpressionoptional_star
-pmnmultiplicativeexpressionoptional_star: pmnmultiplicativeexpression_optional
-numericalasasteriskorslashunaryexpressionstar: numericliteral asteriskorslashunaryexpression_star
-pmnmultiplicativeexpression_optional: pmnmultiplicativeexpression
-pmnmultiplicativeexpression: plusmultiplicativeexpression | minusmultiplicativeexpression | numericalasasteriskorslashunaryexpressionstar
-plusmultiplicativeexpression: "+" multiplicativeexpression
-minusmultiplicativeexpression: "-" multiplicativeexpression
-asteriskunaryexpression: "*" unaryexpression
-slashunaryexpression: "/" unaryexpression
-asteriskorslashunaryexpression: asteriskunaryexpression | slashunaryexpression
-asteriskorslashunaryexpression_star: asteriskorslashunaryexpression
-multiplicativeexpression: unaryexpression asteriskorslashunaryexpression_star
-unaryexpression: exclaimationunaryexpression | plusprimaryexpression | minusprimaryexpression | primaryexpression
-exclaimationunaryexpression: "!" primaryexpression
-plusprimaryexpression: "+" primaryexpression
-minusprimaryexpression: "-" primaryexpression
+additiveexpression: multiplicativeexpression ( "+" multiplicativeexpression | "-" multiplicativeexpression | numericliteral ( ( "*" unaryexpression ) | ( "/" unaryexpression ) )* )*
+multiplicativeexpression: unaryexpression ( "*" unaryexpression | "/" unaryexpression )*
+unaryexpression: "!" primaryexpression | "+" primaryexpression | "-" primaryexpression | primaryexpression
 primaryexpression: brackettedexpression | builtincall | iri | rdfliteral | numericliteral | booleanliteral | var
 brackettedexpression: "(" expression ")"
 builtincall: aggregate | langexpression | langmatchesexpression | iriexpression | uriexpression | containsexpression | yearexpression | monthexpression | dayexpression | isiriexpression | isuriexpression | isliteralexpression| existsfunc | notexistsfunc
@@ -103,21 +52,21 @@ isnumericexpression: "isNUMERIC" "(" expression ")"
 existsfunc: "EXISTS" groupgraphpattern
 notexistsfunc: "NOT EXISTS" groupgraphpattern
 aggregate: countaggregate | sumaggregate | minaggregate | maxaggregate | avgaggregate
-countaggregate: "COUNT" "(" distinct_optional asteriskorexpression ")"
-asteriskorexpression: asterisk | expression
-sumaggregate: "SUM" "(" distinct_optional expression ")"
-minaggregate: "MIN" "(" distinct_optional expression ")"
-maxaggregate: "MAX" "(" distinct_optional expression ")"
-avgaggregate: "AVG" "(" distinct_optional expression ")"
-rdfliteral: "<string>"
-numericliteral: "<number>"
-booleanliteral: true | false
-iri: "<iri>"
-var: "<var>"
-nil: "<null>"
-integer: "<integer>"
-true: "true"
-false: "flase"
+countaggregate: "COUNT" "(" "DISTINCT"? ( "*" | expression ) ")"
+sumaggregate: "SUM" "(" "DISTINCT"? expression ")"
+minaggregate: "MIN" "(" "DISTINCT"? expression ")"
+maxaggregate: "MAX" "(" "DISTINCT"? expression ")"
+avgaggregate: "AVG" "(" "DISTINCT"? expression ")"
+rdfliteral: STRING
+numericliteral: NUMBER
+NUMBER: "<number>"
+booleanliteral: "true" | "false"
+STRING: "<string>"
+iri: IRI
+IRI: "<iri>"
+VAR: "<var>"
+INTEGER: "<integer>"
+NIL: "<null>"
 WS: /[\u0020\u0009\u000D\u000A]/
 %ignore WS
 COMMENT: "#" /[^\n]/*
