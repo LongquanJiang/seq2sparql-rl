@@ -43,15 +43,19 @@ def retrieve_ent_rel(data):
     idx = 0
     for question_id, question_string in data.items():
 
-        q_entities_relations, q_surface_forms = get_Falcon2_predictions(question_string)
+        try:
 
-        if question_id not in entities_relations:
-            entities_relations[question_id] = q_entities_relations
+            q_entities_relations, q_surface_forms = get_Falcon2_predictions(question_string)
 
-        surface_forms.update(q_surface_forms)
+            if question_id not in entities_relations:
+                entities_relations[question_id] = q_entities_relations
 
-        idx += 1
-        print("Processed: {0}, {1}/{2}: ".format(question_id, idx, len(data)))
+            surface_forms.update(q_surface_forms)
+
+            idx += 1
+            print("Processed: {0}, {1}/{2}: ".format(question_id, idx, len(data)))
+        except Exception as e:
+            print(e)
 
     return entities_relations, surface_forms
 
