@@ -73,8 +73,12 @@ if __name__ == '__main__':
         train_entities_relations, train_surface_forms = retrieve_ent_rel(train_data)
         with open("../data/LC-QuAD2/train_data/all_entities_relations_trainset.json", "w") as output_file:
             json.dump(train_entities_relations, output_file)
+        with open("../data/LC-QuAD2/train_data/all_surface_forms_trainset.json", "w") as output_file:
+            json.dump(train_surface_forms, output_file)
 
         test_data = json.load(open("../data/LC-QuAD2/test_data/all_questions_testset.json"))
         test_entities_relations, test_surface_forms = retrieve_ent_rel(test_data)
         with open("../data/LC-QuAD2/test_data/all_entities_relations_testset.json", "w") as output_file:
             json.dump(test_entities_relations, output_file)
+        with open("../data/LC-QuAD2/test_data/all_surface_forms_testset.json", "w") as output_file:
+            json.dump(test_surface_forms, output_file)
