@@ -1,0 +1,23 @@
+// sparql grammar for single-hop question (without constraints)
+start: queryunit
+queryunit: query
+query: selectquery | askquery
+selectquery: selectclause whereclause
+selectclause: "SELECT" "DISTINCT"? ( var | ( "(" aggregate "AS" var ")" ) | "*" )
+askquery: "ASK" whereclause
+whereclause: "WHERE" "{" triplesblock "}"
+triplesblock: varorentity relation varorentity
+varorentity: var | entity
+aggregate: countaggregate | sumaggregate | minaggregate | maxaggregate | avgaggregate
+countaggregate: "COUNT" "(" ( "*" | var ) ")"
+sumaggregate: "SUM" "(" var ")"
+minaggregate: "MIN" "(" var ")"
+maxaggregate: "MAX" "(" var ")"
+avgaggregate: "AVG" "(" var ")"
+var: "<VAR>"
+entity: "<ENT>"
+relation: "<REL>"
+WS: /[\u0020\u0009\u000D\u000A]/
+%ignore WS
+COMMENT: "#" /[^\n]/*
+%ignore COMMENT
